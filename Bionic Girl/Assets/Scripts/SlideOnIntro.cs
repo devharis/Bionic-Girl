@@ -10,4 +10,5 @@ public class SlideOnIntro : MonoBehaviour {
         float step = speed * Time.deltaTime;
         transform.position = Vector3.MoveTowards(transform.position, target, step);
     }
+
 }
