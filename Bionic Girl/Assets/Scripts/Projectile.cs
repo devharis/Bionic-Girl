@@ -5,18 +5,20 @@ using System.Collections;
 public class Projectile : MonoBehaviour
 {
     public float ProjectileSpeed;
-    public float BulletRange;
+    public float BulletRange = 1;
+    public bool TravelRight;
 
     public GameObject ProjectilePrefab;
 
     private Transform _projectileTransform;
-    private GameObject _player;
+    private PlayerController _player;
     private Vector3 _startPosition;
 
 	// Use this for initialization
 	void Start ()
 	{
-        _player = GameObject.FindGameObjectWithTag("Player");
+        _player = GameObject.FindGameObjectWithTag("Player").GetComponent("PlayerController") as PlayerController;
+        TravelRight = _player.FacingRight;
 	    _startPosition = _player.transform.position;
 	    _projectileTransform = transform;
 	}
@@ -24,13 +26,14 @@ public class Projectile : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-	    float amtToMove = ProjectileSpeed * Time.deltaTime;
-        _projectileTransform.Translate(_startPosition * amtToMove);
-
-        if (_projectileTransform.position.x >= BulletRange) {
-            Debug.Log(String.Format("Bullet position: {0}", _projectileTransform.position.x));
-            Destroy(gameObject);
-	    }
-
+        if (TravelRight){
+            _projectileTransform.Translate(new Vector3(ProjectileSpeed * Time.deltaTime, 0, 0));
+            Destroy(gameObject, BulletRange);
+        }
+        else if (!TravelRight)
+        {
+            _projectileTransform.Translate(new Vector3(-ProjectileSpeed * Time.deltaTime, 0, 0));
+            Destroy(gameObject, BulletRange);
+        }
 	}
 }
