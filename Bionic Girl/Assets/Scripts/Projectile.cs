@@ -19,8 +19,13 @@ public class Projectile : MonoBehaviour
 	{
         _player = GameObject.FindGameObjectWithTag("Player").GetComponent("PlayerController") as PlayerController;
         TravelRight = _player.FacingRight;
-	    _startPosition = _player.transform.position;
+        
 	    _projectileTransform = transform;
+
+        // Tweak projectile spawn point
+        float tempY = (_projectileTransform.position.y - 0.095f);
+        float tempX = (_projectileTransform.position.x + 0.6f);
+        _projectileTransform.position = new Vector3(tempX, tempY, _projectileTransform.position.z);
 	}
 	
 	// Update is called once per frame
