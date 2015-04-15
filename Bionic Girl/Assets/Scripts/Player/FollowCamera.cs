@@ -17,7 +17,6 @@ public class FollowCamera : MonoBehaviour
 	void Start () {
         // Setting up the reference to the player object
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        Debug.Log(player.name);
 	}
 
     void Update() {

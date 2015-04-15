@@ -9,7 +9,9 @@ public class PlayerController : MonoBehaviour {
     public bool FacingRight = true;
     public Transform GroundCheck;
     public LayerMask IsGround;
-    public AudioClip Audio;
+
+    public AudioClip JumpClip;
+    public AudioClip ShootClip;
     public GameObject ProjectilePrefab;
 
     private Animator _anim;
@@ -17,6 +19,7 @@ public class PlayerController : MonoBehaviour {
     private float _move;
     private bool _canJump;
     private AudioSource _audio;
+
 
     void Start()
     {
@@ -63,7 +66,8 @@ public class PlayerController : MonoBehaviour {
         {
             _anim.SetBool("Ground", false);
             _rigidbody.AddForce(new Vector2(0, JumpForce));
-
+            
+            _audio.clip = JumpClip;
             if (!_audio.isPlaying)
                 _audio.Play();
         }
@@ -76,6 +80,8 @@ public class PlayerController : MonoBehaviour {
             // Fire shot/projectile
             //Vector3 position = new Vector3(transform.position.x, transform.position.y + (transform.localScale.y / 2));
             Instantiate(ProjectilePrefab, transform.position, Quaternion.identity);
+            _audio.clip = ShootClip;
+            _audio.Play();
         }
     }
 }
