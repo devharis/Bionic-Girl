@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.Scripts.Generic;
 
 public class PlayerController : MonoBehaviour {
 
@@ -7,6 +8,7 @@ public class PlayerController : MonoBehaviour {
     public float GroundRadius = 0.2f;
     public float JumpForce = 500f;
     public bool FacingRight = true;
+    
     public Transform GroundCheck;
     public LayerMask IsGround;
 
@@ -19,6 +21,7 @@ public class PlayerController : MonoBehaviour {
     private float _move;
     private bool _canJump;
     private AudioSource _audio;
+    public WalkDirection WalkDirection { get; private set; }
 
 
     void Start()
@@ -26,6 +29,7 @@ public class PlayerController : MonoBehaviour {
         _anim = GetComponent<Animator>();
         _rigidbody = GetComponent<Rigidbody2D>();
         _audio = GetComponent<AudioSource>();
+        WalkDirection = WalkDirection.WalkRight;
     }
 
     void Update()
@@ -46,23 +50,26 @@ public class PlayerController : MonoBehaviour {
 
         _rigidbody.velocity = new Vector2(_move * MaxSpeed, _rigidbody.velocity.y);
 
-        if (_move > 0 && !FacingRight)
+        if (_move > 0 && WalkDirection == WalkDirection.WalkLeft){
+            WalkDirection = WalkDirection.WalkRight;
             Flip();
-        else if (_move < 0 && FacingRight)
+        }
+        else if (_move < 0 && WalkDirection == WalkDirection.WalkRight){
+            WalkDirection = WalkDirection.WalkLeft;
             Flip();
+        }
     }
 
     private void Flip()
     {
-        FacingRight = !FacingRight;
-        Vector3 theScale = transform.localScale;
+        var theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
     }
 
     private void Movement()
     {
-        if (_canJump && Input.GetKeyDown(KeyCode.W))
+        if (_canJump && Input.GetButtonDown("Jump"))
         {
             _anim.SetBool("Ground", false);
             _rigidbody.AddForce(new Vector2(0, JumpForce));
@@ -75,10 +82,9 @@ public class PlayerController : MonoBehaviour {
             _audio.Stop();
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetButtonDown("Fire1"))
         {
             // Fire shot/projectile
-            //Vector3 position = new Vector3(transform.position.x, transform.position.y + (transform.localScale.y / 2));
             Instantiate(ProjectilePrefab, transform.position, Quaternion.identity);
             _audio.clip = ShootClip;
             _audio.Play();

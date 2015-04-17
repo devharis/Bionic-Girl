@@ -1,10 +1,11 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using Assets.Scripts.Generic;
 
 public class Projectile : MonoBehaviour
 {
-    public float ProjectileSpeed;
+    public float ProjectileSpeed = 1;
     public float BulletRange = 1;
     public bool TravelRight;
 
@@ -18,10 +19,9 @@ public class Projectile : MonoBehaviour
 	void Start ()
 	{
         _player = GameObject.FindGameObjectWithTag("Player").GetComponent("PlayerController") as PlayerController;
-        TravelRight = _player.FacingRight;
+	    TravelRight = _player.WalkDirection == WalkDirection.WalkRight;
         
 	    _projectileTransform = transform;
-
         // Tweak projectile spawn point
         float tempY = (_projectileTransform.position.y - 0.095f);
         _projectileTransform.position = new Vector3(_projectileTransform.position.x, tempY, _projectileTransform.position.z);

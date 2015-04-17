@@ -1,37 +1,42 @@
 ﻿using System;
-using UnityEngine;
 using System.Collections;
-using System.Linq;
+using Assets.Scripts.Generic;
+using UnityEngine;
 
 public class BasicEnemy : MonoBehaviour {
 
-    // raycaster
-    public float RayLength = 1;
-    public float RayPosUnit = 1;
-
-    public float MaxSpeed = 2f;
-    private int _health = 2;
-
-    private bool _dead = false;
-
+    // stats 
+    public float MovementSpeed = 2f;
+    public float AttackSpeed = 1f;
+    public float AttackDamage = 1f;
+    public float Armor = 1f;
+    public float Health = 2f;
+    
+    // sprites, sound
     public Sprite DeadEnemy;
     public Sprite DamagedEnemy;
+
+    public AnimationClip DeathEnemy;
     public AudioClip[] DeathClips;
+
+    // raycaster
+    private float _rayLength = 1;
+    private float _rayPosUnit = 1;
+
     private GameObject _enemyObject;
-    private SpriteRenderer _spriteRenderer;
-    private Transform _frontCheck;
+    private Animator _spriteAnimator;
+    private bool _dead = false;
     
     private Vector3 _moveDirection;
     private WalkDirection _walkDir;
 
     void Start(){
-        _enemyObject = GameObject.Find("Shield-Soldier").gameObject;
-        _spriteRenderer = GameObject.Find("Shield-Soldier").GetComponent<SpriteRenderer>();
+        _spriteAnimator = gameObject.GetComponent<Animator>();
         _walkDir = WalkDirection.WalkLeft;
     }
     
     void Awake() {
-        _frontCheck = transform.Find("FrontCheck").transform;
+        //_frontCheck = transform.Find("FrontCheck").transform;
     }
 
     void FixedUpdate()
@@ -40,68 +45,75 @@ public class BasicEnemy : MonoBehaviour {
         //if (frontHits.Any(c => c.tag == "Projectile"))
         //    // Hit
 
-        // If the enemy has one hit point left and has a damagedEnemy sprite...
-        if (_health == 1 && DamagedEnemy != null)
-            _spriteRenderer.sprite = DamagedEnemy;
-
         // If the enemy has zero or fewer hit points and isn't dead yet...
-        if (_health <= 0 && !DeadEnemy)
-            Death();
-
-        GetComponent<Rigidbody2D>().velocity = new Vector2(-transform.localScale.x * MaxSpeed, GetComponent<Rigidbody2D>().velocity.y);
+        if (Health <= 0 && !DeadEnemy)
+            StartCoroutine(Death());
     }
 
-    protected void Update(){
-        // left pos is one "rayPosUnit" away from the AI's pos
-        var leftPos = transform.position;
-        leftPos.x -= RayPosUnit;
+    void Update(){
 
-        // right pos is one "rayPosUnit" away from the AI's pos
-        var rightPos = transform.position;
-        rightPos.x += RayPosUnit;
+        Movement();
+        GetComponent<Rigidbody2D>().velocity = new Vector2(-transform.localScale.x * MovementSpeed, GetComponent<Rigidbody2D>().velocity.y);
+    }
 
-        switch (_walkDir){
+    private void Movement(){
+        switch (_walkDir)
+        {
             case WalkDirection.WalkLeft:
-                var hit = Physics2D.Raycast(leftPos, -transform.up, RayLength, LayerMask.NameToLayer("Ground"));
+                // left pos is one "rayPosUnit" away from the AI's pos
+                var leftPos = transform.position;
+                leftPos.x -= _rayPosUnit;
+
+                var hit = Physics2D.Raycast(leftPos, -transform.up, _rayLength, 1 << LayerMask.NameToLayer("Ground"));
                 if (!hit)
                 {
                     // if it didn't hit anything, change direction
                     Flip();
                     _walkDir = WalkDirection.WalkRight;
-                } 
-                Debug.DrawRay(leftPos, -transform.up * RayLength, Color.green);
-
-                if (hit && hit.collider.gameObject.tag == "Ground")
-                {
-                    _moveDirection.x = -MaxSpeed * Time.deltaTime;
-                    _walkDir = WalkDirection.WalkRight;
-                } 
-                Debug.DrawRay(transform.position, -transform.right * RayLength, Color.green);
+                }
+                //if (hit){
+                //    _walkDir = WalkDirection.WalkRight;
+                //}
+                Debug.DrawRay(leftPos, -transform.up * _rayLength, Color.green);
+                Debug.DrawRay(transform.position, -transform.right * _rayLength, Color.green);
                 break;
+
             case WalkDirection.WalkRight:
-                var hitRight = Physics2D.Raycast(rightPos, -transform.up, RayLength, LayerMask.NameToLayer("Ground"));
-                if (!hitRight){
+                // right pos is one "rayPosUnit" away from the AI's pos
+                var rightPos = transform.position;
+                rightPos.x += _rayPosUnit;
+
+                var hitRight = Physics2D.Raycast(rightPos, -transform.up, _rayLength, 1 << LayerMask.NameToLayer("Ground"));
+
+                if (!hitRight)
+                {
                     // if it didn't hit anything, change direction
                     Flip();
                     _walkDir = WalkDirection.WalkLeft;
-                } 
-                Debug.DrawRay(rightPos, -transform.up * RayLength, Color.green);
-                if (hitRight && hitRight.collider.gameObject.tag == "Ground")
-                {
-                    _moveDirection.x = MaxSpeed * Time.deltaTime;
-                    _walkDir = WalkDirection.WalkLeft;
-                } 
-                Debug.DrawRay(transform.position, transform.right * RayLength, Color.green);
+                }
+                //if (hitRight){
+                //    _walkDir = WalkDirection.WalkLeft;
+                //}
 
-                
+                Debug.DrawRay(rightPos, -transform.up * _rayLength, Color.red);
+                Debug.DrawRay(transform.position, transform.right * _rayLength, Color.red);
                 break;
         }
-
-        transform.Translate(_moveDirection);
     }
 
-    private void Death(){
-        Destroy(_enemyObject);
+    private IEnumerator Death(){
+        MovementSpeed = 0f;
+        // Play animation
+        _spriteAnimator.Play("Death");
+
+        // Play sound
+
+        // Check animation time...
+        yield return new WaitForSeconds(0.7f);
+
+        Debug.Log(String.Format("Remove : {0}", gameObject));
+        // Remove object
+        Destroy(gameObject);
     }
 
     public void Flip()
@@ -112,14 +124,13 @@ public class BasicEnemy : MonoBehaviour {
         transform.localScale = enemyScale;
     }
 
+    public void Attack(){
+        
+    }
+
     void OnTriggerEnter2D(Collider2D collider){
         if (collider.gameObject.tag == "Projectile"){
-            _health--;
+            Health--;
         }        
     }
-}
-
-public enum WalkDirection{
-    WalkLeft,
-    WalkRight
 }
