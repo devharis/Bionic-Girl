@@ -49,6 +49,10 @@ public class Projectile : MonoBehaviour
         // Do nothing if projectile hits player
         if (collider.gameObject.tag == "Player")
             return;
+
+        if (collider is EdgeCollider2D && collider.gameObject.tag == "Enemy")
+            return;
+
         // Destroy the projectile
         Destroy(gameObject);
     }

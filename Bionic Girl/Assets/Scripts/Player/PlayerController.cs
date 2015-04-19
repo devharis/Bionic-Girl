@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using Assets.Scripts.Generic;
 
@@ -72,6 +73,7 @@ public class PlayerController : MonoBehaviour {
         if (_canJump && Input.GetButtonDown("Jump"))
         {
             _anim.SetBool("Ground", false);
+            //Physics2D.IgnoreLayerCollision(8, 9, true);
             _rigidbody.AddForce(new Vector2(0, JumpForce));
             
             _audio.clip = JumpClip;
@@ -89,5 +91,25 @@ public class PlayerController : MonoBehaviour {
             _audio.clip = ShootClip;
             _audio.Play();
         }
+    }
+
+    void OnTriggerEnter2D(Collider2D collider){
+        //Debug.Log(String.Format("Enter: {0}", collider.tag));
+        if (collider.CompareTag("OneWayPlatform")){
+            collider.enabled = false;
+        }
+    }
+
+    void OnTriggerStay2D(Collider2D collider){
+
+        //if (collider.CompareTag("OneWayPlatform"))
+        //    collider.enabled = false;
+    }
+
+    void OnTriggerExit2D(Collider2D collider){
+        Debug.Log(String.Format("Exit: {0}", collider.tag));
+        if (collider.CompareTag("OneWayPlatform"))
+            collider.enabled = true;
+
     }
 }
