@@ -20,7 +20,7 @@ public class BasicEnemy : MonoBehaviour {
     public AudioClip[] DeathClips;
 
     // raycaster
-    private float _rayLength = 1;
+    public float _rayLength = 1;
     private float _rayPosUnit = 1;
 
     private GameObject _enemyObject;

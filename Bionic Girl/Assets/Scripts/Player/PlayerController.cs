@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour {
     public float GroundRadius = 0.2f;
     public float JumpForce = 500f;
     public bool FacingRight = true;
+    public bool Climb = false;
     
     public Transform GroundCheck;
     public LayerMask IsGround;
@@ -73,7 +74,7 @@ public class PlayerController : MonoBehaviour {
         if (_canJump && Input.GetButtonDown("Jump"))
         {
             _anim.SetBool("Ground", false);
-            //Physics2D.IgnoreLayerCollision(8, 9, true);
+
             _rigidbody.AddForce(new Vector2(0, JumpForce));
             
             _audio.clip = JumpClip;
@@ -93,23 +94,48 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    void OnTriggerEnter2D(Collider2D collider){
-        //Debug.Log(String.Format("Enter: {0}", collider.tag));
-        if (collider.CompareTag("OneWayPlatform")){
-            collider.enabled = false;
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (collider.tag == "Ladder"){
+            // Change animation
+            //_anim.Play("Climb");
+            Climb = true;
+            Debug.Log(collider.tag);
         }
     }
 
-    void OnTriggerStay2D(Collider2D collider){
+    void OnCollisionStay2D(Collision2D coll){
+        if (coll.collider.tag == "Ladder")
+        {
+            Debug.Log(coll.collider.tag);
 
-        //if (collider.CompareTag("OneWayPlatform"))
-        //    collider.enabled = false;
+        
+        }
+
+        if (coll.collider.tag == "OneWayPlatform")
+        {
+            // Change animation
+            //_anim.Play("Climb");
+            //Physics2D.IgnoreCollision(coll.collider, _rigidbody.GetComponent<Collider2D>(), false);
+            Debug.Log(coll.collider.tag);
+        }
     }
 
-    void OnTriggerExit2D(Collider2D collider){
-        Debug.Log(String.Format("Exit: {0}", collider.tag));
-        if (collider.CompareTag("OneWayPlatform"))
-            collider.enabled = true;
+    void OnCollisionExit2D(Collision2D coll){
+        if (coll.collider.tag == "Ladder")
+        {
+            // Change animation
+            
+            Debug.Log(coll.collider.tag);
+        }
 
+        if (coll.collider.tag == "OneWayPlatform")
+        {
+            // Change animation
+            //_anim.Play("Climb");
+            //Physics2D.IgnoreCollision(coll.collider, _rigidbody.GetComponent<Collider2D>(), true);
+
+            Debug.Log(coll.collider.tag);
+        }
     }
 }
