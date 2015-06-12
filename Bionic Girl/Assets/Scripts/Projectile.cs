@@ -50,6 +50,9 @@ public class Projectile : MonoBehaviour
         if (collider.gameObject.tag == "Player")
             return;
 
+        if (collider.gameObject.tag == "Ladder")
+            return;
+
         if (collider is EdgeCollider2D && collider.gameObject.tag == "Enemy")
             return;
 

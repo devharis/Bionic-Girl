@@ -20,7 +20,9 @@ public class BasicEnemy : MonoBehaviour {
     public AudioClip[] DeathClips;
 
     // raycaster
-    public float _rayLength = 1;
+    public WalkDirection WalkDir;
+
+    private float _rayLength = 1;
     private float _rayPosUnit = 1;
 
     private GameObject _enemyObject;
@@ -28,11 +30,11 @@ public class BasicEnemy : MonoBehaviour {
     private bool _dead = false;
     
     private Vector3 _moveDirection;
-    private WalkDirection _walkDir;
+
 
     void Start(){
         _spriteAnimator = gameObject.GetComponent<Animator>();
-        _walkDir = WalkDirection.WalkLeft;
+        WalkDir = WalkDirection.WalkLeft;
     }
     
     void Awake() {
@@ -56,8 +58,8 @@ public class BasicEnemy : MonoBehaviour {
         GetComponent<Rigidbody2D>().velocity = new Vector2(-transform.localScale.x * MovementSpeed, GetComponent<Rigidbody2D>().velocity.y);
     }
 
-    private void Movement(){
-        switch (_walkDir)
+    public virtual void Movement(){
+        switch (WalkDir)
         {
             case WalkDirection.WalkLeft:
                 // left pos is one "rayPosUnit" away from the AI's pos
@@ -69,11 +71,9 @@ public class BasicEnemy : MonoBehaviour {
                 {
                     // if it didn't hit anything, change direction
                     Flip();
-                    _walkDir = WalkDirection.WalkRight;
+                    WalkDir = WalkDirection.WalkRight;
                 }
-                //if (hit){
-                //    _walkDir = WalkDirection.WalkRight;
-                //}
+
                 Debug.DrawRay(leftPos, -transform.up * _rayLength, Color.green);
                 Debug.DrawRay(transform.position, -transform.right * _rayLength, Color.green);
                 break;
@@ -89,11 +89,8 @@ public class BasicEnemy : MonoBehaviour {
                 {
                     // if it didn't hit anything, change direction
                     Flip();
-                    _walkDir = WalkDirection.WalkLeft;
+                    WalkDir = WalkDirection.WalkLeft;
                 }
-                //if (hitRight){
-                //    _walkDir = WalkDirection.WalkLeft;
-                //}
 
                 Debug.DrawRay(rightPos, -transform.up * _rayLength, Color.red);
                 Debug.DrawRay(transform.position, transform.right * _rayLength, Color.red);
@@ -101,7 +98,7 @@ public class BasicEnemy : MonoBehaviour {
         }
     }
 
-    private IEnumerator Death(){
+    public virtual IEnumerator Death(){
         MovementSpeed = 0f;
         // Play animation
         _spriteAnimator.Play("Death");
@@ -116,16 +113,17 @@ public class BasicEnemy : MonoBehaviour {
         Destroy(gameObject);
     }
 
+    public virtual void Attack()
+    {
+
+    }
+
     public void Flip()
     {
         // Multiply the x component of localScale by -1.
         var enemyScale = transform.localScale;
         enemyScale.x *= -1;
         transform.localScale = enemyScale;
-    }
-
-    public void Attack(){
-        
     }
 
     void OnTriggerEnter2D(Collider2D collider){

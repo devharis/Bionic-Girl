@@ -8,8 +8,8 @@ public class PlayerController : MonoBehaviour {
     public float MaxSpeed = 0f;
     public float GroundRadius = 0.2f;
     public float JumpForce = 500f;
+    public float ClimbForce = 0f;
     public bool FacingRight = true;
-    public bool Climb = false;
     
     public Transform GroundCheck;
     public LayerMask IsGround;
@@ -21,7 +21,9 @@ public class PlayerController : MonoBehaviour {
     private Animator _anim;
     private Rigidbody2D _rigidbody;
     private float _move;
+    private float _vertMove;
     private bool _canJump;
+    private bool _isClimbing;
     private AudioSource _audio;
     public WalkDirection WalkDirection { get; private set; }
 
@@ -47,10 +49,15 @@ public class PlayerController : MonoBehaviour {
         _anim.SetFloat("vSpeed", _rigidbody.velocity.y);
 
         _move = Input.GetAxis("Horizontal");
+        _vertMove = Input.GetAxis("Vertical");
 
         _anim.SetFloat("Speed", Mathf.Abs(_move));
 
         _rigidbody.velocity = new Vector2(_move * MaxSpeed, _rigidbody.velocity.y);
+        if (_isClimbing)
+        {
+            _rigidbody.velocity = new Vector2(_move * MaxSpeed, _vertMove * ClimbForce);
+        }
 
         if (_move > 0 && WalkDirection == WalkDirection.WalkLeft){
             WalkDirection = WalkDirection.WalkRight;
@@ -71,6 +78,14 @@ public class PlayerController : MonoBehaviour {
 
     private void Movement()
     {
+        if (_isClimbing && Input.GetAxis("Vertical") > 0)
+        {
+            // Set animation
+            _anim.SetBool("Climb", true);
+            _rigidbody.velocity = new Vector2(_move * MaxSpeed, Input.GetAxis("Vertical") * ClimbForce);
+            Debug.Log(new Vector2(_move * MaxSpeed, Input.GetAxis("Vertical") * ClimbForce));
+        }
+
         if (_canJump && Input.GetButtonDown("Jump"))
         {
             _anim.SetBool("Ground", false);
@@ -97,27 +112,21 @@ public class PlayerController : MonoBehaviour {
     void OnTriggerEnter2D(Collider2D collider)
     {
         if (collider.tag == "Ladder"){
-            // Change animation
-            //_anim.Play("Climb");
-            Climb = true;
-            Debug.Log(collider.tag);
+            _rigidbody.gravityScale = 0;
         }
     }
 
     void OnCollisionStay2D(Collision2D coll){
         if (coll.collider.tag == "Ladder")
         {
-            Debug.Log(coll.collider.tag);
+            _isClimbing = true;
+            // Climb
 
-        
+            Debug.Log(_isClimbing);
         }
 
-        if (coll.collider.tag == "OneWayPlatform")
-        {
-            // Change animation
-            //_anim.Play("Climb");
+        if (coll.collider.tag == "OneWayPlatform"){
             //Physics2D.IgnoreCollision(coll.collider, _rigidbody.GetComponent<Collider2D>(), false);
-            Debug.Log(coll.collider.tag);
         }
     }
 
@@ -125,17 +134,14 @@ public class PlayerController : MonoBehaviour {
         if (coll.collider.tag == "Ladder")
         {
             // Change animation
-            
-            Debug.Log(coll.collider.tag);
+            _rigidbody.gravityScale = 1;
+            _isClimbing = false;
         }
 
         if (coll.collider.tag == "OneWayPlatform")
         {
-            // Change animation
-            //_anim.Play("Climb");
             //Physics2D.IgnoreCollision(coll.collider, _rigidbody.GetComponent<Collider2D>(), true);
 
-            Debug.Log(coll.collider.tag);
         }
     }
 }
