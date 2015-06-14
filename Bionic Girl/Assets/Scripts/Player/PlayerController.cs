@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour {
     
     public Transform GroundCheck;
     public LayerMask IsGround;
+    public LayerMask IsLadder;
 
     public AudioClip JumpClip;
     public AudioClip ShootClip;
@@ -23,10 +24,11 @@ public class PlayerController : MonoBehaviour {
     private float _move;
     private float _vertMove;
     private bool _canJump;
+    private bool _canClimb;
     private bool _isClimbing;
     private AudioSource _audio;
     public WalkDirection WalkDirection { get; private set; }
-
+    public ClimbDirection ClimbDirection { get; private set; }
 
     void Start()
     {
@@ -44,8 +46,10 @@ public class PlayerController : MonoBehaviour {
     void FixedUpdate()
     {
         _canJump = Physics2D.OverlapCircle(GroundCheck.position, GroundRadius, IsGround);
-        _anim.SetBool("Ground", _canJump);
+        _canClimb = Physics2D.OverlapCircle(GroundCheck.position, GroundRadius, IsLadder);
 
+        _anim.SetBool("Ground", _canJump);
+        _anim.SetBool("Climb", _isClimbing);
         _anim.SetFloat("vSpeed", _rigidbody.velocity.y);
 
         _move = Input.GetAxis("Horizontal");
@@ -53,20 +57,19 @@ public class PlayerController : MonoBehaviour {
 
         _anim.SetFloat("Speed", Mathf.Abs(_move));
 
-        _rigidbody.velocity = new Vector2(_move * MaxSpeed, _rigidbody.velocity.y);
-        if (_isClimbing)
+        _isClimbing = _canJump ? false : true;
+
+        if (_canClimb)
         {
             _rigidbody.velocity = new Vector2(_move * MaxSpeed, _vertMove * ClimbForce);
+            _canJump = false;
+            _isClimbing = true;
         }
-
-        if (_move > 0 && WalkDirection == WalkDirection.WalkLeft){
-            WalkDirection = WalkDirection.WalkRight;
-            Flip();
-        }
-        else if (_move < 0 && WalkDirection == WalkDirection.WalkRight){
-            WalkDirection = WalkDirection.WalkLeft;
-            Flip();
-        }
+        else
+        {
+            _rigidbody.velocity = new Vector2(_move * MaxSpeed, _rigidbody.velocity.y);
+            _rigidbody.gravityScale = 3;
+        }      
     }
 
     private void Flip()
@@ -78,28 +81,63 @@ public class PlayerController : MonoBehaviour {
 
     private void Movement()
     {
-        if (_isClimbing && Input.GetAxis("Vertical") > 0)
-        {
-            // Set animation
-            _anim.SetBool("Climb", true);
-            _rigidbody.velocity = new Vector2(_move * MaxSpeed, Input.GetAxis("Vertical") * ClimbForce);
-            Debug.Log(new Vector2(_move * MaxSpeed, Input.GetAxis("Vertical") * ClimbForce));
-        }
+        CheckWalking();
 
+        CheckClimbing();
+     
+        CheckJumping();
+
+        CheckShooting();
+    }
+
+    public void CheckClimbing()
+    {
+        if (_vertMove > 0 && _canClimb)
+        {
+            ClimbDirection = ClimbDirection.ClimbUp;
+            _rigidbody.gravityScale = 0;
+        }
+        else if (_vertMove < 0 && _canClimb)
+        {
+            ClimbDirection = ClimbDirection.ClimbDown;
+            _rigidbody.gravityScale = 0;
+        }
+    }
+
+    private void CheckWalking()
+    {
+        if (_move > 0 && WalkDirection == WalkDirection.WalkLeft)
+        {
+            WalkDirection = WalkDirection.WalkRight;
+            Flip();
+        }
+        else if (_move < 0 && WalkDirection == WalkDirection.WalkRight)
+        {
+            WalkDirection = WalkDirection.WalkLeft;
+            Flip();
+        }
+    }
+
+    private void CheckJumping()
+    {
         if (_canJump && Input.GetButtonDown("Jump"))
         {
             _anim.SetBool("Ground", false);
 
             _rigidbody.AddForce(new Vector2(0, JumpForce));
-            
+
             _audio.clip = JumpClip;
             if (!_audio.isPlaying)
                 _audio.Play();
         }
-        else if (!_canJump && !_audio.isPlaying) {
+        else if (!_canJump && !_audio.isPlaying)
+        {
             _audio.Stop();
         }
+    }
 
+    private void CheckShooting()
+    {
         if (Input.GetButtonDown("Fire1"))
         {
             // Fire shot/projectile
@@ -119,29 +157,16 @@ public class PlayerController : MonoBehaviour {
     void OnCollisionStay2D(Collision2D coll){
         if (coll.collider.tag == "Ladder")
         {
-            _isClimbing = true;
-            // Climb
-
-            Debug.Log(_isClimbing);
-        }
-
-        if (coll.collider.tag == "OneWayPlatform"){
-            //Physics2D.IgnoreCollision(coll.collider, _rigidbody.GetComponent<Collider2D>(), false);
+            _canClimb = true;
         }
     }
 
     void OnCollisionExit2D(Collision2D coll){
         if (coll.collider.tag == "Ladder")
         {
-            // Change animation
-            _rigidbody.gravityScale = 1;
+            // Reset when exiting ladder or touching ground
+            _canClimb = false;
             _isClimbing = false;
-        }
-
-        if (coll.collider.tag == "OneWayPlatform")
-        {
-            //Physics2D.IgnoreCollision(coll.collider, _rigidbody.GetComponent<Collider2D>(), true);
-
         }
     }
 }
