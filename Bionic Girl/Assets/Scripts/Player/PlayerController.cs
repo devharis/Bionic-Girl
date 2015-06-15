@@ -68,7 +68,7 @@ public class PlayerController : MonoBehaviour {
         else
         {
             _rigidbody.velocity = new Vector2(_move * MaxSpeed, _rigidbody.velocity.y);
-            _rigidbody.gravityScale = 3;
+           
         }      
     }
 

@@ -4,54 +4,56 @@ using System.Collections;
 
 public class FollowCamera : MonoBehaviour
 {
-    // variables
-    public float xMargin = 1f;
-    public float yMargin = 1f;
-    public float xSmooth = 1.1f;
-    public float ySmooth = 1f;
-    private Vector2 Velocity;
-    public Vector2 maxXAndY;
-    public Vector2 minXAndY;
+    public Transform target;
+    private Vector3 velocity = Vector3.zero;
 
-    public Transform player;
+    public float smoothTime = 0.15f;
 
-	void Start () {
-        // Setting up the reference to the player object
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-	}
+    public bool verticalMaxEnabled = false;
+    public float verticalMax = 0f;
+    public bool verticalMinEnabled = false;
+    public float verticalMin = 0f;
 
-    void Update() {
-        TrackPlayer();
-    }
+    public bool horizontalMaxEnabled = false;
+    public float horizontalMax = 0f;
+    public bool horizontalMinEnabled = false;
+    public float horizontalMin = 0f;
 
-    private void TrackPlayer()
+    void Update()
     {
-        // get current x and y
-        float targetX = transform.position.x;
-        float targetY = transform.position.y;
+        if (target)
+        {
+            Vector3 targetPosition = target.position;
 
-        // if player moves beyond x
-        if (CheckXMargin())
-            targetX = Mathf.SmoothDamp(transform.position.x, player.position.x, ref Velocity.x, xSmooth);
+            if (verticalMinEnabled && verticalMaxEnabled)
+            {
+                targetPosition.y = Mathf.Clamp(target.position.y, verticalMin, verticalMax);
+            }
+            else if (verticalMinEnabled)
+            {
+                targetPosition.y = Mathf.Clamp(target.position.y, verticalMin, target.position.y);
+            }
+            else if (verticalMaxEnabled)
+            {
+                targetPosition.y = Mathf.Clamp(target.position.y, target.position.y, verticalMax);
+            }
 
-        // if player moves beyond y
-        if (CheckYMargin())
-            targetY = Mathf.SmoothDamp(transform.position.y, player.position.y, ref Velocity.y, ySmooth);
+            if (horizontalMinEnabled && horizontalMaxEnabled)
+            {
+                targetPosition.x = Mathf.Clamp(target.position.x, horizontalMin, horizontalMax);
+            }
+            else if (horizontalMinEnabled)
+            {
+                targetPosition.x = Mathf.Clamp(target.position.x, horizontalMin, target.position.x);
+            }
+            else if (horizontalMaxEnabled)
+            {
+                targetPosition.x = Mathf.Clamp(target.position.x, target.position.x, horizontalMax);
+            }
 
-        // if x and y are larger than set coordinates
-        targetX = Mathf.Clamp(targetX, minXAndY.x, maxXAndY.x);
-        targetY = Mathf.Clamp(targetY, minXAndY.y, maxXAndY.y);
+            targetPosition.z = transform.position.z;
 
-        // Set camera position to target position with same z component
-        transform.position = new Vector3(targetX, targetY, transform.position.z);
-    }
-
-    bool CheckXMargin() {
-        return Mathf.Abs(transform.position.x - player.position.x) > xMargin;
-    }
-
-    bool CheckYMargin()
-    {
-        return Mathf.Abs(transform.position.y - player.position.y) > yMargin;
+            transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+        }
     }
 }
